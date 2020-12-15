@@ -63,4 +63,27 @@ get_angle_distance_format <- function(df){
     select(distance, angle, shot_type, is_counter, is_scored)
 }
 
+# Plots the location of a particular shot from the all_shots dataset
+plot_shot <- function(indx, probs = 0){
+  new_df <- all_shot_info[indx, ] %>% mutate(probs = probs*4)
+  ggplot(data = all_shot_info[indx, ], aes(y = pos_y, x = pos_x)) +
+    annotate_pitch(colour = "white", fill = "green", limits = FALSE, dimensions = pitch_wyscout) +
+    theme_pitch() +
+    #coord_fixed(xlim = c(40, 101), ylim = c(-1, 101), ratio = 0.5) +
+    geom_point(aes(fill = factor(is_scored, levels = c(1, 0)), size = probs, color = shot_type), shape = 21,
+                show.legend = FALSE) + 
+    scale_colour_manual(values = c("Head" = "black", "Foot" = "white"))
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
