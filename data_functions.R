@@ -1,3 +1,4 @@
+# Extracts the tags associated to each shot from a dataframe of shot events
 get_shot_tags <- function(df){
   suppressMessages(shot_tags <- tibble(shot_tags = df$tags) %>% hoist(shot_tags, tag = "id") %>%
                      unnest_wider(tag, names_sep = "") %>% rename_at(vars(contains("...")), funs(gsub("...", "_no_", ., fixed = TRUE))) %>%
@@ -5,6 +6,7 @@ get_shot_tags <- function(df){
   return(shot_tags)
 }
 
+# Returns a dataframe with relevent info about each shot in a nice format
 get_shot_info <- function(df){
   shot_tags <- get_shot_tags(df)
   
@@ -30,3 +32,35 @@ get_shot_info <- function(df){
   
   return(shot_info)
 }
+
+# Returns the distance between shot location to the centre of the goal
+get_shot_distance <- function(x, y){
+  shot_dis <- sqrt((50 - y)^2 + (100 - x)^2)
+  return(shot_dis)
+}
+get_shot_distance_v <- Vectorize(get_shot_distance)
+
+# Returns the angle between shot location and two goal posts
+get_shot_angle <- function(x, y){
+  if(x == 100){
+    if(y < 53.66 & y > 46.34){
+      return(pi)
+    }
+    return(0)
+  }
+  right_dis <- sqrt((53.66 - y)^2 + (100 - x)^2)
+  left_dis <- sqrt((46.34 - y)^2 + (100 - x)^2)
+  goal_line <- 7.32
+  theta = acos((right_dis^2 + left_dis^2 - goal_line^2) / (2 * right_dis * left_dis))
+  return(theta)
+}
+get_shot_angle_v <- Vectorize(get_shot_angle)
+
+# Returns the dataframe in angle/distance format from x/y format
+get_angle_distance_format <- function(df){
+  new_df <- df %>% mutate(angle = get_shot_angle_v(pos_x, pos_y), 
+                          distance = get_shot_distance_v(pos_x, pos_y)) %>%
+    select(distance, angle, shot_type, is_counter, is_scored)
+}
+
+
