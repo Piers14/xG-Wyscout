@@ -48,8 +48,8 @@ all_shot_angles <- get_angle_distance_format(all_shot_info) %>%
 set.seed(100)
 n <- nrow(all_shot_angles)
 total_train_inds <- sample(1:n, floor(0.8 * n))
-val_inds <- train_inds[1:floor(0.2 * n)]
-train_inds <- train_inds[-(1:floor(0.2 * n))]
+val_inds <- total_train_inds[1:floor(0.2 * n)]
+train_inds <- total_train_inds[-(1:floor(0.2 * n))]
 
 train_shots <- all_shot_angles[train_inds, ]
 val_shots <- all_shot_angles[val_inds, ]
