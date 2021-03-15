@@ -1,6 +1,9 @@
 require(jsonlite)
 require(tidyverse)
 
+# Reading in player data
+players <- fromJSON("players.json")
+
 # Reading in event data for each country
 
 england_data <- fromJSON("events_England.json")
@@ -35,10 +38,13 @@ france_shot_info <- get_shot_info(france_shot_data)
 all_shot_info <- bind_rows(england_shot_info, spain_shot_info, germany_shot_info, italy_shot_info, france_shot_info)
 
 
+# Getting player id - weak foot map
+pos_shot_info = get_player_footedness(all_shot_info, players)
+
 
 # Converting x-y coordinates to angle-disatnce - this is the final dataset used
 
-all_shot_angles <- get_angle_distance_format(all_shot_info) %>%
+all_shot_angles <- get_angle_distance_format(pos_shot_info) %>%
   mutate_at(vars(is_scored, is_counter, shot_type), list(factor))
 
 
@@ -54,5 +60,7 @@ train_inds <- total_train_inds[-(1:floor(0.2 * n))]
 train_shots <- all_shot_angles[train_inds, ]
 val_shots <- all_shot_angles[val_inds, ]
 test_shots <- all_shot_angles[-total_train_inds, ]
+
+
 
 

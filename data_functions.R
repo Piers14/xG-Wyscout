@@ -13,11 +13,12 @@ get_shot_info <- function(df){
   new_tags <- shot_tags %>% 
     mutate(is_scored = ifelse(apply(., 1, function(x) any(x == 101, na.rm = TRUE)), 1, 0), 
            is_blocked = ifelse(apply(., 1, function(x) any(x == 2101, na.rm = TRUE)), 1, 0), 
-           shot_type = ifelse(apply(., 1, function(x) any((x == 401 | x == 402), na.rm = TRUE)), "Foot", 
-                              ifelse(apply(., 1, function(x) any(x == 403, na.rm = TRUE)), "Head", NA)), 
+           shot_type = ifelse(rowSums(. == "401", na.rm = T) > 0, "left", 
+                              ifelse(rowSums(. == "402", na.rm = T) > 0, "right", 
+                                     ifelse(rowSums(. == "403", na.rm = T) > 0, "head/body", "NA"))), 
            is_counter  = ifelse(apply(., 1, function(x) any(x == 1901, na.rm = TRUE)), 1, 0))
   
-  suppressMessages(shot_pos_df <- tibble(shot_pos = df$positions) %>%
+  suppressMessages(shot_pos_df <- tibble(shot_pos = df$positions, player_id = df$playerId) %>%
                      hoist(shot_pos, pos_y = "y", pos_x = "x") %>%
                      unnest_wider(pos_y, names_sep = "_") %>%
                      unnest_wider(pos_x, names_sep = "_") %>%
@@ -27,10 +28,20 @@ get_shot_info <- function(df){
   shot_info <- cbind(new_tags, shot_pos_df) %>%
     select(-c(1:6)) %>%
     filter(is_blocked == 0) %>%
-    select(c(pos_x_1, pos_y_1, shot_type, is_counter, is_scored)) %>%
+    select(c(pos_x_1, pos_y_1, shot_type, is_counter, player_id, is_scored)) %>%
     rename(pos_x = pos_x_1, pos_y = pos_y_1)
   
   return(shot_info)
+}
+
+get_player_footedness <- function(df, players){
+  ndf = players %>% dplyr::select(c("wyId", "foot"))
+  test = df %>% left_join(ndf, by = c("player_id" = "wyId"))
+  new_test = test %>% mutate(player_shot_type = if_else(shot_type == "head/body", "head/body",
+                                                        if_else(foot == "", "unknown foot", 
+                                                                if_else(shot_type == foot, "strong foot", "weak foot")))) %>%
+    dplyr::select(pos_x, pos_y, shot_type = player_shot_type, is_counter, is_scored)
+  return(new_test)
 }
 
 # Returns the distance between shot location to the centre of the goal
