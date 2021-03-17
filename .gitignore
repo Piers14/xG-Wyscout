@@ -4,3 +4,4 @@
 .Ruserdata
 *.json
 *.csv
+.ipynb_checkpoints/EDA-checkpoint.ipynb

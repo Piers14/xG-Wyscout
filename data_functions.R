@@ -39,7 +39,8 @@ get_player_footedness <- function(df, players){
   test = df %>% left_join(ndf, by = c("player_id" = "wyId"))
   new_test = test %>% mutate(player_shot_type = if_else(shot_type == "head/body", "head/body",
                                                         if_else(foot == "", "unknown foot", 
-                                                                if_else(shot_type == foot, "strong foot", "weak foot")))) %>%
+                                                                if_else(foot == "both", "strong foot", 
+                                                                if_else(shot_type == foot, "strong foot", "weak foot"))))) %>%
     dplyr::select(pos_x, pos_y, shot_type = player_shot_type, is_counter, is_scored)
   return(new_test)
 }
